@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>荷塘月色 · 朱自清</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #e9ecef; --dim: rgba(233,236,239,.28); --moon: #f3ecd6; --jade: #9fd8bd; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #03060b; color: var(--ink);
+    font-family: 'Noto Serif TC', 'Songti TC', 'STSong', serif; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; }
+
+  /* —— 片頭 —— */
+  #intro { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; gap: 7vw;
+    background: radial-gradient(ellipse at 50% 60%, rgba(3,6,11,.25), rgba(3,6,11,.85)); transition: opacity 2.5s ease, visibility 2.5s; z-index: 10; }
+  body.started #intro { opacity: 0; visibility: hidden; pointer-events: none; }
+  #intro .title { writing-mode: vertical-rl; font-family: 'Ma Shan Zheng', 'Noto Serif TC', serif; font-size: clamp(64px, 10vw, 140px);
+    letter-spacing: .18em; color: var(--moon); text-shadow: 0 0 40px rgba(243,236,214,.35); animation: rise 3s ease both; }
+  #intro .side { writing-mode: vertical-rl; display: flex; flex-direction: column; gap: 2.2em; align-items: flex-start; animation: rise 3s .8s ease both; }
+  #intro .author { font-size: 20px; letter-spacing: .5em; color: var(--ink); opacity: .85; }
+  #intro .date { font-size: 13px; letter-spacing: .35em; opacity: .45; }
+  #start { writing-mode: vertical-rl; background: none; border: 1px solid rgba(243,236,214,.35); color: var(--moon); font: inherit; font-size: 16px;
+    letter-spacing: .6em; padding: 1.4em .9em .8em; cursor: pointer; transition: all .6s; margin-top: 2em; }
+  #start:hover { background: rgba(243,236,214,.08); border-color: var(--moon); box-shadow: 0 0 30px rgba(243,236,214,.2); }
+  #intro .tip { position: absolute; bottom: 5vh; left: 0; right: 0; text-align: center; font-size: 12px; letter-spacing: .3em; opacity: .4; }
+  @keyframes rise { from { opacity: 0; transform: translateY(20px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+  @media (max-width: 700px) { #intro { gap: 10vw; } }
+
+  /* —— 文字：直排，右起 —— */
+  #reader { position: fixed; top: 7vh; right: 5vw; height: 78vh; max-width: 62vw; display: flex; flex-direction: row-reverse; gap: 2.2em;
+    opacity: 0; transition: opacity 2s ease 1.5s; pointer-events: none; z-index: 5; }
+  body.started #reader { opacity: 1; }
+  body.notext #reader { opacity: 0 !important; transition-delay: 0s; }
+  #chapter-title { writing-mode: vertical-rl; font-family: 'Ma Shan Zheng', serif; font-size: 30px; color: var(--moon); letter-spacing: .3em;
+    text-shadow: 0 0 20px rgba(243,236,214,.3); flex: none; }
+  #chapter-title::after { content: ''; display: block; width: 1px; height: 60px; margin: 1em auto 0; background: linear-gradient(var(--moon), transparent); opacity: .5; }
+  #text { writing-mode: vertical-rl; font-size: clamp(15px, 1.25vw, 19px); line-height: 2.25; letter-spacing: .14em; font-weight: 300;
+    overflow: hidden; pointer-events: auto; text-shadow: 0 0 8px rgba(0,0,0,.95), 0 0 18px rgba(0,0,0,.8); }
+  #text p { margin-left: .9em; text-indent: 2em; }
+  #text p.verse { font-family: 'Ma Shan Zheng', serif; font-size: 1.12em; color: var(--moon); text-indent: 0; padding-top: 3em; margin-left: 1.6em; line-height: 2.1; }
+  .ch { opacity: 0; filter: blur(4px); transition: opacity 1.4s ease, filter 1.4s ease, color 1s; display: inline; }
+  .ch.on { opacity: 1; filter: none; }
+  .kw { cursor: pointer; position: relative; }
+  .kw .ch.on { color: var(--jade); }
+  .kw:hover .ch.on { color: #fff; text-shadow: 0 0 12px var(--jade), 0 0 3px #000; }
+  .kw::before { content: ''; position: absolute; right: -.35em; top: 0; bottom: 0; width: 1px;
+    background: linear-gradient(transparent, var(--jade), transparent); opacity: .5; }
+  @media (max-width: 800px) {
+    #reader { top: auto; bottom: 12vh; right: 3vw; left: 3vw; height: 46vh; max-width: none; }
+    #text { font-size: 14px; line-height: 2; }
+    #chapter-title { font-size: 22px; }
+  }
+
+  /* —— 章節目錄 —— */
+  #dots { position: fixed; left: 3vw; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 14px; z-index: 6;
+    opacity: 0; transition: opacity 2s 2s; }
+  body.started #dots { opacity: 1; }
+  #dots button { background: none; border: 0; color: var(--ink); display: flex; align-items: center; gap: 12px; cursor: pointer; font: inherit; padding: 2px 0; }
+  #dots i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--dim); transition: all .6s; }
+  #dots span { font-size: 12px; letter-spacing: .3em; opacity: 0; transform: translateX(-6px); transition: all .5s; white-space: nowrap; }
+  #dots:hover span, #dots button.on span { opacity: .75; transform: none; }
+  #dots button.on i { background: var(--moon); border-color: var(--moon); box-shadow: 0 0 10px var(--moon); }
+  @media (max-width: 800px) { #dots { top: 5vh; transform: none; flex-direction: row; left: 50%; translate: -50% 0; } #dots span { display: none; } }
+
+  /* —— 控制列 —— */
+  #controls { position: fixed; left: 3vw; bottom: 4vh; display: flex; gap: 10px; z-index: 6; opacity: 0; transition: opacity 2s 2s; }
+  body.started #controls { opacity: 1; }
+  #controls button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--dim); background: rgba(3,6,11,.35); color: var(--ink);
+    font-size: 12px; cursor: pointer; transition: all .4s; backdrop-filter: blur(4px); font-family: inherit; }
+  #controls button:hover { border-color: var(--moon); color: var(--moon); }
+  #mute.off { opacity: .4; text-decoration: line-through; }
+  #hint { position: fixed; left: 50%; bottom: 4vh; transform: translateX(-50%); font-size: 12px; letter-spacing: .25em; opacity: 0; z-index: 6;
+    animation: hint 12s 6s ease forwards; pointer-events: none; white-space: nowrap; }
+  body:not(.started) #hint { display: none; }
+  #hint b { color: var(--jade); font-weight: 400; }
+  @keyframes hint { 0% { opacity: 0; } 10%, 80% { opacity: .55; } 100% { opacity: 0; } }
+
+  /* —— 結尾 —— */
+  #end { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3em; z-index: 8;
+    opacity: 0; pointer-events: none; transition: opacity 4s; }
+  #end.show { opacity: 1; pointer-events: auto; }
+  #end .sig { writing-mode: vertical-rl; font-size: 15px; letter-spacing: .6em; line-height: 2.4; opacity: .7; text-align: start; }
+  #again { background: none; border: 1px solid var(--dim); color: var(--moon); font: inherit; letter-spacing: .5em; padding: .7em 1.4em .7em 1.9em; cursor: pointer; }
+  #again:hover { border-color: var(--moon); }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+  <div id="stage"></div>
+
+  <div id="intro">
+    <div class="side">
+      <div class="author">朱自清</div>
+      <div class="date">一九二七年七月　北京淸華園</div>
+      <button id="start">月下踱步</button>
+    </div>
+    <div class="title">荷塘月色</div>
+    <div class="tip">建議戴上耳機　·　聲音皆即時合成</div>
+  </div>
+
+  <div id="reader">
+    <div id="chapter-title"></div>
+    <div id="text"></div>
+  </div>
+
+  <nav id="dots"></nav>
+  <div id="controls">
+    <button id="play" title="播放／暫停（空白鍵）">❙❙</button>
+    <button id="mute" title="聲音">聲</button>
+    <button id="toggle-text" title="隱藏文字（H）">文</button>
+  </div>
+  <div id="hint">點擊<b>綠色的字詞</b>，喚出景致　·　←→ 或滾輪 翻章　·　移動滑鼠 環顧</div>
+
+  <div id="end">
+    <div class="sig">一九二七年七月<br>北京淸華園</div>
+    <button id="again">再走一回</button>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

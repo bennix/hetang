@@ -1,0 +1,16 @@
+{
+  "name": "hetang",
+  "version": "1.0.0",
+  "description": "荷塘月色 · Three.js 交互阅读体验",
+  "scripts": {
+    "start": "python3 serve.py",
+    "build": "node scripts/build.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "three": "^0.186.1"
+  }
+}
